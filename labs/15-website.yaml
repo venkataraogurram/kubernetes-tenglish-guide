@@ -1,0 +1,9 @@
+# Lab 15: Website custom resource (15-crd.yaml apply chesaka)
+apiVersion: lab.example.com/v1
+kind: Website
+metadata:
+  name: hello
+  namespace: k8s-lab
+spec:
+  message: "Namaskaram from a custom resource"
+  replicas: 2

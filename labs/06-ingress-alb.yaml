@@ -1,0 +1,39 @@
+# Lab 06: EKS Auto Mode ALB Ingress (Lab 01 web Service kavali)
+# COST + EXPOSURE: internet-facing ALB create avthundi (gantaku charge, internet lo evaraina nginx welcome page chudochu).
+# Test ayyaka ventane delete:  kubectl delete -f labs/06-ingress-alb.yaml
+# Public vaddu ante scheme: internal pettu (VPC lopala nundi matrame reachable).
+apiVersion: eks.amazonaws.com/v1
+kind: IngressClassParams
+metadata:
+  name: lab-alb
+spec:
+  scheme: internet-facing
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: lab-alb
+spec:
+  controller: eks.amazonaws.com/alb
+  parameters:
+    apiGroup: eks.amazonaws.com
+    kind: IngressClassParams
+    name: lab-alb
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  namespace: k8s-lab
+spec:
+  ingressClassName: lab-alb
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 80

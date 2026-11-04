@@ -1,0 +1,46 @@
+# Lab 14: Pod Security Admission "restricted" namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k8s-lab-secure
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/warn: restricted
+---
+# Idi PASS avthundi: non-root, no privilege escalation, caps dropped, seccomp
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-web
+  namespace: k8s-lab-secure
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: secure-web }
+  template:
+    metadata:
+      labels: { app: secure-web }
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+      - name: web
+        image: nginxinc/nginx-unprivileged:1.27
+        ports:
+        - containerPort: 8080
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: { drop: ["ALL"] }
+        resources:
+          requests: { cpu: 20m, memory: 32Mi }
+          limits: { memory: 64Mi }
+        readinessProbe:
+          httpGet: { path: /, port: 8080 }
+        volumeMounts:
+        - { name: tmp, mountPath: /tmp }
+      volumes:
+      - { name: tmp, emptyDir: {} }

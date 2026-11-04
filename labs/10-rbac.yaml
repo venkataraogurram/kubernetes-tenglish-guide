@@ -1,0 +1,46 @@
+# Lab 10: ServiceAccount + Role + RoleBinding (namespace-scoped, read-only pods)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-viewer
+  namespace: k8s-lab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-reader
+  namespace: k8s-lab
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/log"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-viewer-reads-pods
+  namespace: k8s-lab
+subjects:
+- kind: ServiceAccount
+  name: pod-viewer
+  namespace: k8s-lab
+roleRef:
+  kind: Role
+  name: pod-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+# Ee pod lopala nundi Kubernetes API ni SA token tho call chesi chuddam
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-client
+  namespace: k8s-lab
+spec:
+  serviceAccountName: pod-viewer
+  containers:
+  - name: curl
+    image: curlimages/curl:8.10.1
+    command: ["sleep", "3600"]
+    resources:
+      requests: { cpu: 10m, memory: 16Mi }
+      limits: { memory: 32Mi }

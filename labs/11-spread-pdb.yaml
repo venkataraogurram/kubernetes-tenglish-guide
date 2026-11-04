@@ -1,0 +1,40 @@
+# Lab 11: topology spread across zones + PDB
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spread
+  namespace: k8s-lab
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: spread
+  template:
+    metadata:
+      labels:
+        app: spread
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule      # Auto Mode kavalsina zones lo nodes launch chesthundi
+        labelSelector:
+          matchLabels:
+            app: spread
+      containers:
+      - name: web
+        image: nginx:1.27
+        resources:
+          requests: { cpu: 50m, memory: 64Mi }
+          limits: { memory: 128Mi }
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: spread-pdb
+  namespace: k8s-lab
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: spread

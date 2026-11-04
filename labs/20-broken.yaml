@@ -1,0 +1,65 @@
+# Lab 20: Break-and-fix challenge. Ee file lo 4 bugs unnayi. Apply chesi, debug chesi, fix cheyyi.
+# Hints labs/README.md lo. Answers kinda README lo collapse chesi unnayi, modata nuvve try cheyyi.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-api
+  namespace: k8s-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: broken-api
+  template:
+    metadata:
+      labels:
+        app: broken-api
+    spec:
+      containers:
+      - name: api
+        image: nginx:1.27-doesnotexist
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            memory: 128Mi
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broken-api
+  namespace: k8s-lab
+spec:
+  selector:
+    app: brokenapi
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken-worker
+  namespace: k8s-lab
+spec:
+  containers:
+  - name: worker
+    image: busybox:1.36
+    command: ["sh", "-c", "echo starting; cat /config/settings.env; echo; sleep 3600"]
+    volumeMounts:
+    - name: cfg
+      mountPath: /config
+    resources:
+      requests: { cpu: 10m, memory: 16Mi }
+      limits: { memory: 32Mi }
+  volumes:
+  - name: cfg
+    configMap:
+      name: worker-settings

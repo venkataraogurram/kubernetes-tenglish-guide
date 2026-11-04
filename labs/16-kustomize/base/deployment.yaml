@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kweb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kweb
+  template:
+    metadata:
+      labels:
+        app: kweb
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.27
+        envFrom:
+        - configMapRef:
+            name: kweb-config
+        ports:
+        - containerPort: 80
+        resources:
+          requests: { cpu: 20m, memory: 32Mi }
+          limits: { memory: 64Mi }

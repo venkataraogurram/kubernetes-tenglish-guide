@@ -1,0 +1,38 @@
+# Lab 15: CRD (controller lekunda) - data store matrame ani chudadaniki
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: websites.lab.example.com
+spec:
+  group: lab.example.com
+  names:
+    kind: Website
+    plural: websites
+    singular: website
+    shortNames: [ws]
+  scope: Namespaced
+  versions:
+  - name: v1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            required: [message]
+            properties:
+              message:
+                type: string
+              replicas:
+                type: integer
+                minimum: 1
+                maximum: 5
+    additionalPrinterColumns:
+    - name: Message
+      type: string
+      jsonPath: .spec.message
+    - name: Replicas
+      type: integer
+      jsonPath: .spec.replicas

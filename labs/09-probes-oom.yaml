@@ -1,0 +1,40 @@
+# Lab 09: probes and OOMKilled
+# (a) readiness probe fails -> pod Running but 0/1 Ready, Service endpoints lo undadu
+apiVersion: v1
+kind: Pod
+metadata:
+  name: not-ready
+  namespace: k8s-lab
+  labels:
+    app: web                       # web Service select chesthundi, kani Ready kaadu kabatti traffic radhu
+spec:
+  containers:
+  - name: web
+    image: nginx:1.27
+    ports:
+    - containerPort: 80
+      name: http
+    readinessProbe:
+      httpGet:
+        path: /does-not-exist       # 404 -> probe fail
+        port: 80
+      periodSeconds: 5
+    resources:
+      requests: { cpu: 10m, memory: 32Mi }
+      limits: { memory: 64Mi }
+---
+# (b) memory limit 100Mi, kani 250M allocate -> OOMKilled (exit 137)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: oom-demo
+  namespace: k8s-lab
+spec:
+  containers:
+  - name: stress
+    image: polinux/stress           # Kubernetes official docs example image (amd64)
+    command: ["stress"]
+    args: ["--vm", "1", "--vm-bytes", "250M", "--vm-hang", "1"]
+    resources:
+      requests: { cpu: 10m, memory: 50Mi }
+      limits: { memory: 100Mi }
